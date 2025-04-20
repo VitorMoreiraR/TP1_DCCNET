@@ -2,7 +2,7 @@ import hashlib
 import manipulation_frame 
 from manipulation_frame import convert_response_to_dictionary, create_frame_confirmation, create_frame_md5, create_data_frame_authentication
 
-def make_atutentication(gas_in_bytes, client):
+def make_autentication(gas_in_bytes, client):
     
     client.send(create_data_frame_authentication(gas_in_bytes, 0)) #enviando gas
     

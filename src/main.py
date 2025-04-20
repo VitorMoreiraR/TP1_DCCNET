@@ -3,7 +3,7 @@ import argparse
 import logging
 
 from client import config_socket
-from autentication import make_atutentication
+from autentication import make_autentication
 from comunication import make_comunication
 
 
@@ -31,7 +31,7 @@ def main():
 
     client = config_socket(server_host, int(port))
 
-    make_atutentication(gas_in_bytes, client)
+    make_autentication(gas_in_bytes, client)
     make_comunication(client)
 
 if __name__ == "__main__":

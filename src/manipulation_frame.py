@@ -56,7 +56,7 @@ def convert_response_to_dictionary(response):
     if is_checksum_correct(checksum, frame_without_checksum) == False:
         print('----------------------CHECKSUM ERRADO ---------------------------------')
         
-    print(f'RESPONSE -> SYNC_BYTES: {SYNC_BYTES.hex()} - SYNC_BYTES: {SYNC_BYTES.hex()} -  checksum: {checksum.hex()} - length: {int.from_bytes(length)} - id: {int.from_bytes(id)} - flag: {flag.hex()} - data: {data if data != None else ''}\n')
+    print(f'RESPONSE -> SYNC_BYTES: {SYNC_BYTES.hex()} - SYNC_BYTES: {SYNC_BYTES.hex()} -  checksum: {checksum.hex()} - length: {int.from_bytes(length)} - id: {int.from_bytes(id)} - flag: {flag.hex()} - data: {(data if data != None else "")}\n')
     
     return {'flag': flag, 'data': data.decode('ascii') if data != None else '', 'id': int.from_bytes(id)}
 
