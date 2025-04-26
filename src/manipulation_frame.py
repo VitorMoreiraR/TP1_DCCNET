@@ -91,12 +91,12 @@ def create_frame_md5(md5_hash, id):
     
     return frame
 
-def create_data_frame_authentication(gas_in_bytes, id):
+def create_data_frame_authentication(gas_in_bytes, id, flag=FLAG_GENERIC_DATA):
     header = SYNC_BYTES + SYNC_BYTES
     length = len(gas_in_bytes).to_bytes(2, byteorder="big")
     identifier = id.to_bytes(2, byteorder="big")
-    frame = header + bytes.fromhex('0000') + length + identifier + FLAG_GENERIC_DATA + gas_in_bytes
+    frame = header + bytes.fromhex('0000') + length + identifier + flag + gas_in_bytes
     checksum = internet_checksum(frame)
     print(f'SEND -> header: {header.hex()} - checksum: {checksum.hex()} - length: {int.from_bytes(length)} - identifier: {identifier.hex()} flag: {FLAG_GENERIC_DATA.hex()} - gas: {gas_in_bytes.hex()}\n')
-    return header + checksum + length + identifier + FLAG_GENERIC_DATA + gas_in_bytes
+    return header + checksum + length + identifier + flag  + gas_in_bytes
 
