@@ -5,39 +5,6 @@ FLAG_GENERIC_DATA = bytes.fromhex('00')
 FLAG_CONFIRMATION = bytes.fromhex('80') 
 FLAG_AND = bytes.fromhex('40') 
 
-# def make_comunication(client): 
-#     last_frame_sent = None
-#     last_id_sent = None
-#     retry_count = 0
-#     RETRY_LIMIT = 16
-#     RETRY_TIMEOUT = 1.0  # segundos
-#     last_send_time = 0
-#     id_ask = 1
-#     id_data = 0
-
-#     while True:
-#         try:
-#             response = client.recv(4096 + 120)       
-#             frame = convert_response_to_dictionary(response)
-#             if frame['flag'] == FLAG_CONFIRMATION and  frame['id'] == last_id_sent:
-#                 retry_count = 0
-#                 last_frame_sent = None
-#                 alternar ID
-#             elif frame é novo DATA válido:
-#                 montar mensagem
-#                 enviar ACK
-#             elif frame é retransmissão idêntica:
-#                 reenviar ACK
-#             elif frame é END:
-#                 break
-#         except timeout:
-#             if last_frame_sent is not None:
-#                 if retry_count < RETRY_LIMIT:
-#                     send(last_frame_sent)
-#                     retry_count += 1
-#                 else:
-#                     enviar RST e encerrar
-
 def make_comunication(client):
     
     mensage = ''

@@ -14,6 +14,7 @@ def convert_response_to_dictionary(response):
     id = None
     flag = None
     data = None
+
     while i < len(response):
         
         if response[i:i+4] == SYNC_BYTES and count_sync < 2:
@@ -56,9 +57,9 @@ def convert_response_to_dictionary(response):
     if is_checksum_correct(checksum, frame_without_checksum) == False:
         print('----------------------CHECKSUM ERRADO ---------------------------------')
         
-    print(f'RESPONSE -> SYNC_BYTES: {SYNC_BYTES.hex()} - SYNC_BYTES: {SYNC_BYTES.hex()} -  checksum: {checksum.hex()} - length: {int.from_bytes(length)} - id: {int.from_bytes(id)} - flag: {flag.hex()} - data: {(data if data != None else "")}\n')
+    print(f'RESPONSE -> SYNC_BYTES: {SYNC_BYTES.hex()} - SYNC_BYTES: {SYNC_BYTES.hex()} -  checksum: {checksum.hex()} - length: {int.from_bytes(length)} - id: {int.from_bytes(id)} - flag: {flag.hex()} - data: {(data[:2] if data != None else "")}\n')
     
-    return {'flag': flag, 'data': data.decode('ascii') if data != None else '', 'id': int.from_bytes(id)}
+    return {'flag': flag, 'data': data if data != None else '', 'id': int.from_bytes(id)}
 
 def create_frame_confirmation(id):
     header = SYNC_BYTES + SYNC_BYTES
@@ -91,12 +92,12 @@ def create_frame_md5(md5_hash, id):
     
     return frame
 
-def create_data_frame_authentication(gas_in_bytes, id, flag=FLAG_GENERIC_DATA):
+def create_data_frame(data, id, flag=FLAG_GENERIC_DATA):
     header = SYNC_BYTES + SYNC_BYTES
-    length = len(gas_in_bytes).to_bytes(2, byteorder="big")
+    length = len(data).to_bytes(2, byteorder="big")
     identifier = id.to_bytes(2, byteorder="big")
-    frame = header + bytes.fromhex('0000') + length + identifier + flag + gas_in_bytes
+    frame = header + bytes.fromhex('0000') + length + identifier + flag + data
     checksum = internet_checksum(frame)
-    print(f'SEND -> header: {header.hex()} - checksum: {checksum.hex()} - length: {int.from_bytes(length)} - identifier: {identifier.hex()} flag: {FLAG_GENERIC_DATA.hex()} - gas: {gas_in_bytes.hex()}\n')
-    return header + checksum + length + identifier + flag  + gas_in_bytes
+    print(f'SEND -> header: {header.hex()} - checksum: {checksum.hex()} - length: {int.from_bytes(length)} - identifier: {identifier.hex()} flag: {flag.hex()} - data: {data[:2]}\n')
+    return header + checksum + length + identifier + flag  + data
 
