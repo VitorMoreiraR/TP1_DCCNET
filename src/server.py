@@ -1,132 +1,83 @@
 import argparse
+import asyncio
 import socket
 import sys
-import threading
-from manipulation_frame import (
-    create_data_frame_authentication,
-    convert_response_to_dictionary,
-    create_frame_confirmation,
-)
+from core.connection import handle_connection_async
 
-FLAG_GENERIC_DATA = bytes.fromhex("00")
-FLAG_CONFIRMATION = bytes.fromhex("80")
-FLAG_END = bytes.fromhex("40")
+async def run_server_async(port, input_path, output_path):
+    async def client_handler(reader, writer):
+        await handle_connection_async(reader, writer, input_path, output_path)
 
+    server = await asyncio.start_server(
+        client_handler, host="", port=port, family=socket.AF_UNSPEC, reuse_address=True
+    )
 
-def send_file(sock, filepath):
-    id_data = 0
-    with open(filepath, "rb") as f:
-        while chunk := f.read(1024):
-            frame = create_data_frame_authentication(chunk, id_data)
-            sock.sendall(frame)
-            id_data ^= 1
-        frame = create_data_frame_authentication(b"", id_data, flag=FLAG_END)
-        sock.sendall(frame)
+    addr = server.sockets[0].getsockname()
+    print(f"Servidor rodando na porta {port} ({addr})")
 
-
-def receive_file(sock, output_path):
-    with open(output_path, "wb") as f:
-        while True:
-            frame = sock.recv(4096)
-            if not frame:
-                break
-
-            info = convert_response_to_dictionary(frame)
-            flag = info["flag"]
-            data = info["data"]
-            frame_id = info["id"]
-
-            if flag == FLAG_GENERIC_DATA:
-                f.write(data.encode('ascii'))
-                sock.sendall(create_frame_confirmation(frame_id))
-
-            elif flag == FLAG_END:
-                print("[INFO] FLAG_END")
-                break
-
-    sock.close()
-    print("[INFO] Arquivo salvo e conexão encerrada.")
-
-
-def handle_connection(sock, input_path, output_path):
-    t_send = threading.Thread(target=send_file, args=(sock, input_path))
-    t_recv = threading.Thread(target=receive_file, args=(sock, output_path))
-    t_send.start()
-    t_recv.start()
-    t_send.join()
-    t_recv.join()
-    sock.close()
-
-
-def run_server(port, input_path, output_path):
-    with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as server:
-        server.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
-        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind(("", port))
-        server.listen(1)
-        print(f"Servidor rodando na porta {port}")
-        conn, addr = server.accept()
-        print(f"Conexao com {addr}")
-        handle_connection(conn, input_path, output_path)
+    async with server:
+        await server.serve_forever()
 
 
 def parse_ip_port(ip_port):
-    if ip_port.startswith('['):
-        end = ip_port.find(']')
+    if ip_port.startswith("["):
+        end = ip_port.find("]")
         if end == -1:
             raise ValueError("Formato invalido")
         ip = ip_port[1:end]
-        port_part = ip_port[end+1:]
-        if port_part.startswith(':'):
+        port_part = ip_port[end + 1 :]
+        if port_part.startswith(":"):
             port = int(port_part[1:])
         else:
             raise ValueError("Porta invalida")
         return ip, port
     else:
-        parts = ip_port.rsplit(':', 1)
+        parts = ip_port.rsplit(":", 1)
         if len(parts) != 2:
             raise ValueError("Formato invalido")
         ip, port = parts[0], int(parts[1])
         return ip, port
 
 
-def run_client(ip, port, input_path, output_path):
+async def run_client(ip, port, input_path, output_path):
     try:
-        for res in socket.getaddrinfo(ip, port, proto=socket.IPPROTO_TCP):
-            af, socktype, proto, canonname, sa = res
-            try:
-                sock = socket.socket(af, socktype)
-                sock.connect(sa)
-                print(f"Conectado: {sa}")
-                handle_connection(sock, input_path, output_path)
-                return
-            except socket.error as e:
-                print(f"Erro ao conectar: {e}")
-                continue
-        print("Falha ao conectar")
-        sys.exit(1)
+        reader, writer = await asyncio.open_connection(
+            ip, port, family=socket.AF_UNSPEC
+        )
+
+        print(f"Conectado a {ip}:{port}")
+
+        await handle_connection_async(reader, writer, input_path, output_path)
+
     except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+        reader, writer = await asyncio.open_connection(ip, port, family=socket.AF_INET)
+
+        print(f"Conectado a {ip}:{port}")
+
+        await handle_connection_async(reader, writer, input_path, output_path)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='DCCNET File Transfer Application')
-    parser.add_argument('-s', nargs=3, metavar=('PORT', 'INPUT', 'OUTPUT'), help='Modo servidor')
-    parser.add_argument('-c', nargs=3, metavar=('IP:PORT', 'INPUT', 'OUTPUT'), help='Modo cliente')
+    parser = argparse.ArgumentParser(description="DCCNET File Transfer Application")
+    parser.add_argument(
+        "-s", nargs=3, metavar=("PORT", "INPUT", "OUTPUT"), help="Modo servidor"
+    )
+    parser.add_argument(
+        "-c", nargs=3, metavar=("IP:PORT", "INPUT", "OUTPUT"), help="Modo cliente"
+    )
 
     args = parser.parse_args()
 
     if args.s:
         port = int(args.s[0])
-        run_server(port, args.s[1], args.s[2])
+        asyncio.run(run_server_async(port, args.s[1], args.s[2]))
     elif args.c:
         ip_port = args.c[0]
         input_path = args.c[1]
         output_path = args.c[2]
         try:
             ip, port = parse_ip_port(ip_port)
-            run_client(ip, port, input_path, output_path)
+            asyncio.run(run_client(ip, port, input_path, output_path))
         except ValueError as e:
             print(f"Error parsing IP:PORT: {e}")
             sys.exit(1)

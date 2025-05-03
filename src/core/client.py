@@ -1,7 +1,6 @@
-# client.py
 import socket
 import logging
-import hashlib
+
 
 def config_socket(server_host, port):
     try:
@@ -12,9 +11,6 @@ def config_socket(server_host, port):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((server_host, port))
         logging.info("Conectado via IPv4")
-        
+
     client.settimeout(0.55)
     return client
-
-
-
