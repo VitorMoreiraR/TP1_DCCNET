@@ -1,11 +1,11 @@
-SYNC_BYTES = bytes.fromhex("DCC023C2")
-FLAG_GENERIC_DATA = bytes.fromhex("00")
-FLAG_CONFIRMATION = bytes.fromhex("80")
-from .protocol import internet_checksum
-
-
-def is_checksum_correct(checksum_frame, frame_without_checksum):
-    return checksum_frame == internet_checksum(frame_without_checksum)
+from .constants import (
+    SYNC_BYTES,
+    FLAG_CONFIRMATION,
+    FLAG_GENERIC_DATA,
+    BYTE_ORDER,
+    EMPTY_DATA,
+)
+from .utils import internet_checksum, is_checksum_correct
 
 
 def convert_response_to_dictionary(response):
@@ -51,9 +51,10 @@ def convert_response_to_dictionary(response):
             data = response[i : i + int.from_bytes(length)]
             i = i + int.from_bytes(length)
             break
-    
-    if data is None: data = b''
-    
+
+    if data is None:
+        data = EMPTY_DATA
+
     frame_without_checksum = (
         SYNC_BYTES + SYNC_BYTES + bytes.fromhex("0000") + length + id + flag
     )
@@ -76,7 +77,7 @@ def convert_response_to_dictionary(response):
 
 def create_frame_confirmation(id):
     header = SYNC_BYTES + SYNC_BYTES
-    identifier = id.to_bytes(2, byteorder="big")
+    identifier = id.to_bytes(2, byteorder=BYTE_ORDER)
     frame = (
         header
         + bytes.fromhex("0000")
@@ -97,10 +98,10 @@ def create_frame_confirmation(id):
 def create_frame_md5(md5_hash, id):
 
     header = SYNC_BYTES + SYNC_BYTES
-    identifier = id.to_bytes(2, byteorder="big")
+    identifier = id.to_bytes(2, byteorder=BYTE_ORDER)
     payload = md5_hash.hexdigest() + "\n"
     payload = payload.encode("ascii")
-    length = len(payload).to_bytes(2, byteorder="big")
+    length = len(payload).to_bytes(2, byteorder=BYTE_ORDER)
 
     flag = FLAG_GENERIC_DATA
 

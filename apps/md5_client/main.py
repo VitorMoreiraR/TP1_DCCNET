@@ -1,15 +1,8 @@
 import argparse
-import logging
 
-from core.client import config_socket
-from core.autentication import make_autentication
-from core.comunication import make_comunication
-
-
-def setup_logger():
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-    )
+from dccnet.autentication import make_autentication
+from dccnet.comunication import make_comunication
+from dccnet.utils import setup_logger, config_socket
 
 
 def parse_args():
