@@ -4,10 +4,7 @@ from .manipulation_frame import (
     create_data_frame,
     create_frame_confirmation,
 )
-
-FLAG_GENERIC_DATA = bytes.fromhex("00")
-FLAG_CONFIRMATION = bytes.fromhex("80")
-FLAG_END = bytes.fromhex("40")
+from .constants import FLAG_GENERIC_DATA, FLAG_CONFIRMATION, FLAG_END, EMPTY_DATA
 
 
 async def handle_connection_async(reader, writer, input_path, output_path):
@@ -32,21 +29,22 @@ async def handle_connection_async(reader, writer, input_path, output_path):
                         async with can_send_condition:
                             while not can_send:
                                 await asyncio.wait_for(
-                                    can_send_condition.wait(), timeout=0.6  # Timeout de 5 segundos esperando ACK
+                                    can_send_condition.wait(),
+                                    timeout=0.6,  # Timeout de 5 segundos esperando ACK
                                 )
                         break
                     except asyncio.TimeoutError:
                         tentativa = tentativa + 1
                 can_send = False
-                if(receiver_done):
-                     frame = await reader.read(4096 + 120)
-                     info = convert_response_to_dictionary(frame)
-                     flag = info["flag"]
-                     if flag == FLAG_CONFIRMATION:
-                         async with can_send_condition:
-                             can_send = True
+                if receiver_done:
+                    frame = await reader.read(4096 + 120)
+                    info = convert_response_to_dictionary(frame)
+                    flag = info["flag"]
+                    if flag == FLAG_CONFIRMATION:
+                        async with can_send_condition:
+                            can_send = True
 
-        frame = create_data_frame(b"", id_data, flag=FLAG_END)
+        frame = create_data_frame(EMPTY_DATA, id_data, flag=FLAG_END)
         writer.write(frame)
         await writer.drain()
 
@@ -71,7 +69,9 @@ async def handle_connection_async(reader, writer, input_path, output_path):
                         can_send = True
                         can_send_condition.notify()
 
-                if flag == FLAG_GENERIC_DATA or (flag == FLAG_END and data != b""):
+                if flag == FLAG_GENERIC_DATA or (
+                    flag == FLAG_END and data != EMPTY_DATA
+                ):
                     f.write(data)
                     writer.write(create_frame_confirmation(frame_id))
                     await writer.drain()
