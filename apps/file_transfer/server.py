@@ -10,13 +10,13 @@ async def run_server_async(port, input_path, output_path):
 
     sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)  # <- ESSENCIAL para dual-stack
-    sock.bind(('::', port))  # Bind em todas interfaces (IPv6 e IPv4)
+    sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0) 
+    sock.bind(('::', port)) 
     sock.listen(100)
     sock.setblocking(False)
     
     server = await asyncio.start_server(
-        client_handler, sock=sock#host="", port=port, family=socket.AF_UNSPEC, reuse_address=True
+        client_handler, sock=sock
     )
 
     addr = server.sockets[0].getsockname()
