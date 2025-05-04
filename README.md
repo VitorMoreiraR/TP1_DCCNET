@@ -66,8 +66,8 @@ python -m apps.md5_client.main pugna.snes.dcc.ufmg.br:51510 2022036012:9:f54785d
 
 ```bash
 # Formato: python -m apps.file_transfer.server -s PORTA INPUT OUTPUT
-python -m apps.file_transfer.server -s 8080 server_input.txt server_output.txt
+python -m apps.file_transfer.server -s 55000 temp/server_input.txt temp/server_output.txt
 
 # Formato: python -m apps.file_transfer.client -c IP:PORTA INPUT OUTPUT
-python -m apps.file_transfer.client -c 127.0.0.1:8080 temp/client_input.txt client_output.txt
+python -m apps.file_transfer.client -c 127.0.0.1:55000 temp/client_input.txt temp/client_output.txt
 ```
