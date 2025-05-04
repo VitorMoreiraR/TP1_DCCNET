@@ -14,7 +14,6 @@ async def run_server_async(port, input_path, output_path):
     sock.bind(('::', port))  # Bind em todas interfaces (IPv6 e IPv4)
     sock.listen(100)
     sock.setblocking(False)
-
     
     server = await asyncio.start_server(
         client_handler, sock=sock#host="", port=port, family=socket.AF_UNSPEC, reuse_address=True
