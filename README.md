@@ -1,3 +1,7 @@
+# Integrantes
+Vitor Moreira Ramos de Rezende
+Iago da Silva Rodrigues Alves
+
 # TP1 - DCCNET
 
 Este projeto implementa um protocolo de rede customizado chamado **DCCNET**, utilizado para envio e recepção de arquivos e mensagens autenticadas entre cliente e servidor.

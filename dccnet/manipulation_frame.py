@@ -6,7 +6,7 @@ from .constants import (
     EMPTY_DATA,
 )
 from .utils import internet_checksum, is_checksum_correct
-
+from .exceptions import InvalidChecksumError
 
 def convert_response_to_dictionary(response):
     count_sync = 0
@@ -49,20 +49,20 @@ def convert_response_to_dictionary(response):
 
         if data == None:
             data = response[i : i + int.from_bytes(length)]
-            i = i + int.from_bytes(length)
+            #i = i + int.from_bytes(length)
             break
 
     if data is None:
         data = EMPTY_DATA
-
+    
     frame_without_checksum = (
         SYNC_BYTES + SYNC_BYTES + bytes.fromhex("0000") + length + id + flag
     )
     if data:
         frame_without_checksum = frame_without_checksum + data
 
-    if is_checksum_correct(checksum, frame_without_checksum) == False:
-        print("----------------------CHECKSUM ERRADO ---------------------------------")
+    if not is_checksum_correct(checksum, frame_without_checksum):
+        raise InvalidChecksumError("Checksum inválido — descartando frame")
 
     print(
         f'RESPONSE -> SYNC_BYTES: {SYNC_BYTES.hex()} - SYNC_BYTES: {SYNC_BYTES.hex()} -  checksum: {checksum.hex()} - length: {int.from_bytes(length)} - id: {int.from_bytes(id)} - flag: {flag.hex()} - data: {(data[:2] if data != None else "")}\n'
