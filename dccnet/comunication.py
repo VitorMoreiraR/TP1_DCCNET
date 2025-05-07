@@ -1,4 +1,6 @@
 import hashlib
+import socket
+from .exceptions import InvalidChecksumError, MissingAckError
 from .constants import (
     FLAG_CONFIRMATION,
     FLAG_END,
@@ -13,6 +15,7 @@ from .manipulation_frame import (
 )
 
 
+
 def make_comunication(client):
 
     mensage = EMPTY_DATA
@@ -21,17 +24,21 @@ def make_comunication(client):
     a = 0
     frame_md5 = EMPTY_DATA
     ack_expected = False
+    retries = 0
+    max_retries = 16
+    
     while True:
         try:
             response = client.recv(4096 + 120)
             frame = convert_response_to_dictionary(response)
 
             if frame["flag"] != FLAG_CONFIRMATION and ack_expected == True:
-                raise Exception("ACK NÂO RETORNADO")
+                raise MissingAckError("ACK esperado não foi recebido.")
 
             if frame["flag"] == FLAG_CONFIRMATION and mensage.endswith(MESSAGE_END):
                 mensage = EMPTY_DATA
                 ack_expected = False
+                retries = 0
 
             if frame["flag"] == FLAG_GENERIC_DATA or frame["flag"] == FLAG_END:
                 mensage += frame["data"]
@@ -48,7 +55,15 @@ def make_comunication(client):
             if frame["flag"] == FLAG_END:
                 break
 
-        except:
+        except (MissingAckError, InvalidChecksumError, socket.timeout) as e:
+            print(f"{type(e).__name__}: {e}")
             if frame["flag"] == FLAG_GENERIC_DATA and mensage.endswith(MESSAGE_END):
-                client.send(frame_md5)
-                print("RETRASMITION\n")  # ocorre quando não recebo o ask do servidor
+                if retries < max_retries:
+                    client.send(frame_md5)
+                    retries += 1
+                    print(f"RETRANSMISSION ({retries}/{max_retries})\n")
+                else:
+                    print("Frame descartado após múltiplas falhas.\n")
+                    mensage = EMPTY_DATA
+                    ack_expected = False
+                    retries = 0
