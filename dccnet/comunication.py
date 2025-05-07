@@ -55,7 +55,10 @@ def make_comunication(client):
             if frame["flag"] == FLAG_END:
                 break
 
-        except (MissingAckError, InvalidChecksumError, socket.timeout) as e:
+        except (InvalidChecksumError) as e:
+             print(f"{type(e).__name__}: {e}")
+             
+        except (MissingAckError, socket.timeout) as e:
             print(f"{type(e).__name__}: {e}")
             if frame["flag"] == FLAG_GENERIC_DATA and mensage.endswith(MESSAGE_END):
                 if retries < max_retries:
@@ -67,3 +70,4 @@ def make_comunication(client):
                     mensage = EMPTY_DATA
                     ack_expected = False
                     retries = 0
+       

@@ -49,7 +49,7 @@ def convert_response_to_dictionary(response):
 
         if data == None:
             data = response[i : i + int.from_bytes(length)]
-            i = i + int.from_bytes(length)
+            #i = i + int.from_bytes(length)
             break
 
     if data is None:
